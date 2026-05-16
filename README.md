@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Fraud Detection with Apache Spark
 
 Group 3 - Big Data Project
@@ -15,3 +16,7 @@ Hadoop HDFS
 Apache Spark (PySpark)
 Spark MLlib
 Python
+=======
+# Fraud-Detection-Spark
+Big Data group project - Financial Fraud Detection with Spark
+>>>>>>> 1dacba9cdced66e66e44d9e3d93ef6131da40b2c
