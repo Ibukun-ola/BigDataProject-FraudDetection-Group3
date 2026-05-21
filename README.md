@@ -36,6 +36,8 @@ indicators.
 ---
 
 ## Repository Structure
+
+```
 src/
 ├── ingestion.py              # Load PaySim into HDFS, schema validation, EDA
 ├── feature_engineering.py    # Spark Windowing, velocity features, data cleaning
@@ -44,6 +46,7 @@ src/
 data/                         # Dataset download instructions
 report/                       # Final report and findings
 notebooks/                    # Supporting notebooks
+```
 
 ---
 
