@@ -18,7 +18,8 @@ indicators.
 |------|-----------|--------|----------------|
 | Ibukunoluwa Adeleke | 252325001 | @Ibukun-ola | Data Ingestion & Feature Engineering |
 | Chioma Agu | 252325002 | @Aguchioma | Model Training |
-| Bolanle Olaleye | 252325007 | @bolz-coder | Evaluation & Reporting |
+| Bolanle Olaleye | 252325007 | @bolz-coder | Evaluation |
+| All Group Members | ... | ... | Reporting |
 
 **Lecturer:** Dr. Isah Charles Saidu
 
