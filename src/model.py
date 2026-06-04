@@ -50,14 +50,14 @@ feature_cols=[
 	"txn_count_15min",
 	"amt_sum_15min",
 	"balance_drop",
-	"balanced_wiped",
+	"balance_wiped",
 	"oldbalanceOrg",
 	"newbalanceOrig"
 ]
 
 assembler=VectorAssembler(
 	inputCols=feature_cols,
-	outputcol="features"
+	outputCol="features"
 )
 
 
@@ -80,9 +80,9 @@ pipeline=Pipeline(stages=[type_indexer, assembler,rf])
 #-------Train/Test split---------------------------
 
 print("\n>>> Splitting data into train and test sets (80/20)...")
-train, test =df.randomSplit([0.8,0.2], seed =42
+train, test =df.randomSplit([0.8,0.2], seed =42)
 print(f">>> Training rows: {train.count():,}")" 
-print(f">>>Testing rows: (test.count():,}")
+print(f">>>Testing rows: {test.count():,}")
 
 
 #--------Train the model------------------------------
@@ -106,7 +106,7 @@ print(">>> Cross-Validation Complete!")
 #--------Save Model to HDFS--------------------------
 
 print("\n>>> Saving model to HDFS...")
-mode.write()overwrite()save(
+model.write().overwrite()save(
 	"hdfs://localhost:9000/fraud_project/model/"
 )
 
