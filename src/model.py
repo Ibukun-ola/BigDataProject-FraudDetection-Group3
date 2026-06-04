@@ -1,10 +1,10 @@
 
 from pyspark.sql import SparkSession
-from pyspark.sql import function as F
-from pyspark.ml import pipeline
-from pyspark.ml.feature import VectorAssembler, StringIndex
+from pyspark.sql import functions as F
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import VectorAssembler, StringIndexer
 from pyspark.ml.classification import RandomForestClassifier
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 #------Start Spark Session--------------------------------------
@@ -31,7 +31,7 @@ legit_count=df.filter(F.col("isFraud")==0).count()
 ratio=legit_count/fraud_count
 
 print(f">>>Fraud count: {fraud_count:,}")
-print(f">>>Legitimate count: {legit_count:,})
+print(f">>> Legitimate count: {legit_count:,}")
 print(f">>>Weight ratio: {ratio:.2f}")
 
 df=df.withColumn("classWeight",
@@ -81,16 +81,27 @@ pipeline=Pipeline(stages=[type_indexer, assembler,rf])
 
 print("\n>>> Splitting data into train and test sets (80/20)...")
 train, test =df.randomSplit([0.8,0.2], seed =42
-print(f">>>Training rows: {train.count}():,}")
+print(f">>> Training rows: {train.count():,}")" 
 print(f">>>Testing rows: (test.count():,}")
 
 
 #--------Train the model------------------------------
-print("\n>>> Training Random Forest model...")
-model = pipeline.fit(train)
-print (">>>Training Complete!")
+print("\n>>> Running Cross-Validation...")
+paramGrid = ParamGridBuilder() \
+    .addGrid(rf.numTrees, [10, 20]) \
+    .build()
 
+crossval = CrossValidator(
+    estimator=pipeline,
+    estimatorParamMaps=paramGrid,
+    evaluator=MulticlassClassificationEvaluator(
+        labelCol='isFraud',
+        metricName='weightedRecall'),
+    numFolds=3
+)
 
+model = crossval.fit(train)
+print(">>> Cross-Validation Complete!")
 
 #--------Save Model to HDFS--------------------------
 
