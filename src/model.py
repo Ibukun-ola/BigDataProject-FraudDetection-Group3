@@ -81,7 +81,7 @@ pipeline=Pipeline(stages=[type_indexer, assembler,rf])
 
 print("\n>>> Splitting data into train and test sets (80/20)...")
 train, test =df.randomSplit([0.8,0.2], seed =42)
-print(f">>> Training rows: {train.count():,}")" 
+print(f">>> Training rows: {train.count():,}") 
 print(f">>>Testing rows: {test.count():,}")
 
 
@@ -106,7 +106,7 @@ print(">>> Cross-Validation Complete!")
 #--------Save Model to HDFS--------------------------
 
 print("\n>>> Saving model to HDFS...")
-model.write().overwrite()save(
+model.write().overwrite().save(
 	"hdfs://localhost:9000/fraud_project/model/"
 )
 
