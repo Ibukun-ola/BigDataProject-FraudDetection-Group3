@@ -61,12 +61,12 @@ techniques and a high Recall classifier to minimise missed fraud.
 - Total Transactions: 6,362,620 (full dataset)
 - Fraud Ratio: 0.1291%
 
-# Model Evaluation Results
+### Model Evaluation Results
 - Recall: 0.9611
 - Precision: 0.9986
 - F1 Score: 0.9788
   
-# Top 3 fraud indicators
+### Top 3 fraud indicators
 - balance_drop - 0.4706
 - balance_wiped - 0.2997
 - typeIndex - 0.0611
