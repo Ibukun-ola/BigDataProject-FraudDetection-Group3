@@ -58,7 +58,11 @@ a 1:100 fraud-to-legitimate ratio, requiring sophisticated sampling
 techniques and a high Recall classifier to minimise missed fraud.
 
 ### Key Findings
-- Total Transactions: 6,362,620
+- Total Transactions: 6,362,620 (full dataset)
+- Training/Evaluation Sample: 5% representative sample (memory constraints on local VM)
 - Fraud Ratio: 0.1291%
-- Primary Metric: Recall Score
-- Top 3 fraud indicators: (to be updated after evaluation)
+- AUC-ROC: 0.9943
+- Recall: 0.9711
+- Precision: 0.9988
+- F1 Score: 0.9842
+- Top 3 fraud indicators: balance_drop, amount, txn_count_15min
