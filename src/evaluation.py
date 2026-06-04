@@ -1,75 +1,69 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from pyspark.ml import PipelineModel
-from pyspark.ml.evaluation import BinaryClassificationEvaluator
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import VectorAssembler, StringIndexer
+from pyspark.ml.classification import RandomForestClassifier
 from pyspark.ml.evaluation import MulticlassClassificationEvaluator
 
 spark = SparkSession.builder \
     .appName("FraudDetection-Evaluation") \
+    .config("spark.driver.memory", "1g") \
+    .config("spark.executor.memory", "1g") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("ERROR")
 
-print("\n>>> Loading engineered features from HDFS...")
-df = spark.read.parquet(
-    "hdfs://localhost:9000/fraud_project/features/"
-)
+print("\n>>> Loading features...")
+df = spark.read.parquet("hdfs://localhost:9000/fraud_project/features/")
+df = df.sample(fraction=0.05, seed=42)
 
-_, test = df.randomSplit([0.8, 0.2], seed=42)
+fraud_count = df.filter(F.col("isFraud") == 1).count()
+legit_count = df.filter(F.col("isFraud") == 0).count()
+ratio = legit_count / fraud_count
 
-print("\n>>> Loading trained model from HDFS...")
-model = PipelineModel.load(
-    "hdfs://localhost:9000/fraud_project/model/"
-)
+df = df.withColumn("classWeight",
+    F.when(F.col("isFraud") == 1, ratio).otherwise(1.0))
 
-print("\n>>> Generating predictions...")
+type_indexer = StringIndexer(inputCol="type", outputCol="typeIndex")
+feature_cols = ["amount", "typeIndex", "txn_count_15min",
+    "amt_sum_15min", "balance_drop", "balance_wiped",
+    "oldbalanceOrg", "newbalanceOrig"]
+assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
+rf = RandomForestClassifier(
+    labelCol="isFraud", featuresCol="features",
+    weightCol="classWeight", numTrees=10, maxDepth=4, seed=42)
+
+pipeline = Pipeline(stages=[type_indexer, assembler, rf])
+train, test = df.randomSplit([0.8, 0.2], seed=42)
+
+print("\n>>> Training model...")
+model = pipeline.fit(train)
+
+print("\n>>> Evaluating...")
 predictions = model.transform(test)
 
-auc_eval = BinaryClassificationEvaluator(
-    labelCol="isFraud",
-    rawPredictionCol="rawPrediction",
-    metricName="areaUnderROC"
-)
-auc = auc_eval.evaluate(predictions)
+recall = MulticlassClassificationEvaluator(
+    labelCol="isFraud", predictionCol="prediction",
+    metricName="weightedRecall").evaluate(predictions)
 
-recall_eval = MulticlassClassificationEvaluator(
-    labelCol="isFraud",
-    predictionCol="prediction",
-    metricName="weightedRecall"
-)
-recall = recall_eval.evaluate(predictions)
+precision = MulticlassClassificationEvaluator(
+    labelCol="isFraud", predictionCol="prediction",
+    metricName="weightedPrecision").evaluate(predictions)
 
-precision_eval = MulticlassClassificationEvaluator(
-    labelCol="isFraud",
-    predictionCol="prediction",
-    metricName="weightedPrecision"
-)
-precision = precision_eval.evaluate(predictions)
+f1 = MulticlassClassificationEvaluator(
+    labelCol="isFraud", predictionCol="prediction",
+    metricName="f1").evaluate(predictions)
 
-f1_eval = MulticlassClassificationEvaluator(
-    labelCol="isFraud",
-    predictionCol="prediction",
-    metricName="f1"
-)
-f1 = f1_eval.evaluate(predictions)
-
-print(f"\n>>> MODEL EVALUATION RESULTS")
-print(f">>> AUC-ROC:   {auc:.4f}")
-print(f">>> Recall:    {recall:.4f}  <- Primary Metric")
-print(f">>> Precision: {precision:.4f}")
-print(f">>> F1 Score:  {f1:.4f}")
+print("\n>>> MODEL EVALUATION RESULTS")
+print(">>> Recall:    " + str(round(recall, 4)))
+print(">>> Precision: " + str(round(precision, 4)))
+print(">>> F1 Score:  " + str(round(f1, 4)))
 
 print("\n>>> Confusion Matrix:")
 predictions.groupBy("isFraud", "prediction") \
            .count() \
            .orderBy("isFraud", "prediction") \
            .show()
-
-feature_cols = [
-    "amount", "typeIndex", "txn_count_15min",
-    "amt_sum_15min", "balance_drop", "balance_wiped",
-    "oldbalanceOrg", "newbalanceOrig"
-]
 
 rf_model = model.stages[-1]
 importances = rf_model.featureImportances
@@ -78,10 +72,9 @@ feature_importance = sorted(
     key=lambda x: -x[1]
 )
 
-print(f"\n{'Rank':<6} {'Feature':<25} {'Importance Score'}")
-print("-" * 45)
+print("\n>>> Top 3 Features:")
 for rank, (feat, score) in enumerate(feature_importance[:3], 1):
-    print(f"  {rank}    {feat:<25} {score:.4f}")
+    print(str(rank) + ". " + feat + ": " + str(round(score, 4)))
 
 print("\n>>> Evaluation Complete!")
 spark.stop()
