@@ -1,4 +1,3 @@
-cat > src/evaluation.py << 'EOF'
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.ml import PipelineModel
@@ -86,4 +85,3 @@ for rank, (feat, score) in enumerate(feature_importance[:3], 1):
 
 print("\n>>> Evaluation Complete!")
 spark.stop()
-EOF
