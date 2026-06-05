@@ -67,6 +67,6 @@ techniques and a high Recall classifier to minimise missed fraud.
 - F1 Score: 0.9788
   
 ### Top 3 fraud indicators
-- balance_drop - 0.4221
-- balance_wiped - 0.2597
-- txn_count_15min - 0.1055
+- balance_drop - 0.4706
+- balance_wiped - 0.2997
+- typeIndex - 0.0611
